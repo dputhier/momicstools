@@ -1,0 +1,19 @@
+Package: ohmiki
+Title: Our helpful multi-omics tool kit
+Version: 0.1
+Authors@R: 
+    c(person("Denis", "Puthier",
+           role = c("aut", "cre"),
+           email = "denis.puthier@univ-amu.fr"),
+       person("Arnauld", "Sergé",
+           role = c("aut"),
+           email = "arnauld.serge@inserm.fr"))
+Description: This package implements a set of function for spatial multi-omics. Depending on our needs...
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports:
+Suggests:
+  ggplot2, Seurat, SeuratData
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.1

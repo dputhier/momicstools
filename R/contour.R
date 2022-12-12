@@ -1,0 +1,237 @@
+#' @name compute_visium_ortho_hull
+#' @title Compute location of segments used to create an orthogonal hull around points related
+#' to a particular class.
+#' @param x the column name storing the x coord
+#' @param y the column name storing the y coord
+#' @param k the column name storing the classes (0 not part of the class of interest, 1 part of the class of interest)
+#' @param size_y the size of the square (y axis)
+#' @param size_x the size of the square (x axis)
+#' @param step_y the distance between two points on the y axis.
+#' @param size_x the distance between two points on the x axis.
+#' @param delta add more or less flexibility to search for neighbor points
+#' @keywords hull, spatial transcriptomics, visium
+#' @return a dataframe with coordinates x, y, xend, yend (see geom_segments).
+#' @examples
+#' ## Install and process the brain dataset
+#' library(Seurat)
+#' library(SeuratData)
+#' library(ggplot2)
+#' InstallData("stxBrain")
+#' brain <- LoadData("stxBrain", type = "anterior1")
+#' brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
+#' brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
+#' brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
+#' brain <- FindClusters(brain, verbose = FALSE)
+#' brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
+#' spatial_plot <- SpatialDimPlot(brain, label = TRUE, label.size = 3, pt.size.factor = 1.5)
+#' ## Retrieve x/y coordinates and group from ggplot object
+#' coord_st_data <- ggplot_build(spatial_plot)$data[[1]][,c("x", "y", "group")]
+#' coord_st_data$group <- coord_st_data$group - 1 # group are 1-based in ggplot compare to seurat
+#' ## Cluster 0 is, for instance, the cluster of interest.
+#' cluster_to_show <- 7 # Could be also c(a, b)
+#' coord_st_data$k <- ifelse(coord_st_data$group %in% cluster_to_show, 1, 0)
+#' ## Compute the segments of the hull.
+#' path <- compute_visium_ortho_hull(coord_st_data, size_x=3.2, size_y=3.6, delta=0.5)
+#' ## Add the segments to the ggplot diagram
+#' spatial_plot +
+#'   theme_bw() +
+#'   geom_segment(data=path,
+#'                mapping=aes(x=x1,
+#'                            y=y1,
+#'                            xend=x2,
+#'                            yend=y2),
+#'                inherit.aes = F,
+#'                color="white",
+#'                size=0.7)
+
+
+compute_visium_ortho_hull <- function(data,
+                          x="x",
+                          y="y",
+                          k="k",
+                          size_x=4.6,
+                          size_y=5,
+                          size_line=1,
+                          step_x=2.6,
+                          step_y=2.4,
+                          color="black",
+                          delta=0.3,
+                          verbose=F){
+
+  center_and_rotate <- function(data, center_x, center_y, angle, x="x", y="y"){
+
+    data[, x] <- data[, x] - center_x
+    data[, y] <- data[, y] - center_y
+    angle_rad <- pi * angle / 180
+
+    # center
+    data[p, x] <- data[p, x] - center_x
+    data[p, y] <- data[p, y] - center_y
+
+    # size_y and size_x will be half the size:
+    size_y <- size_y / 2
+    size_x <- size_x / 2
+
+    # rotate
+    rotation_mat <- matrix(c(cos(angle_rad),
+                             -sin(angle_rad),
+                             sin(angle_rad),
+                             cos(angle_rad)),
+                           nc=2, byrow = T)
+
+    rotated_mat <- as.matrix(data[, c(x,y)]) %*% rotation_mat
+    colnames(rotated_mat) <- c(x,y)
+    data[,c(x,y)] <- rotated_mat[,c(x,y)]
+
+    return(data)
+  }
+
+
+  get_neighbor_class <- function(data_cr){
+    test_x <- data_cr$x > 0 & data_cr$x < step_x * 2 + (step_x * 2) * delta
+    test_y <- data_cr$y > 0 - (step_y/2)  & data_cr$y < 0 + (step_y/2)
+    hit <- data[test_x & test_y, ]
+
+    if(nrow(hit) > 0){
+      neighbor_class <- hit[, k]
+    }else{
+      neighbor_class <- NULL
+    }
+
+    return(neighbor_class)
+  }
+
+
+  # Create a dataframe to store
+  # square segment
+
+  if(verbose)
+    cat(">> Creating a dataframe to store output.\n")
+  df_coord <- data.frame(matrix(NA, nc=4, nr=4))
+  rownames(df_coord) <- sapply("region_name",
+                               paste0, "_",
+                               c("south", "north", "west", "east"))
+  colnames(df_coord) <- c("x1", "x2", "y1", "y2")
+
+  if(verbose)
+    cat(">> Looping over the points.\n")
+
+  for(p in 1:nrow(data)){
+
+    x_p <- data[p, x]
+    y_p <- data[p, y]
+    pt_class <- data[p, k]
+
+    p_name <- paste0(p, "_", x_p, "_", y_p, "_")
+
+    if(verbose)
+      cat(paste0(">> Processing", p_name, ".\n"))
+
+
+    if(pt_class == 1){
+      if(verbose)
+        print(paste0(x_p, " ", y_p))
+
+      ## West
+      data_cr <- center_and_rotate(data, center_x = x_p, center_y = y_p, angle=180, x=x, y=y)
+      neighbor_class <- get_neighbor_class(data_cr)
+
+      if(neighbor_class == 0 || is.null(neighbor_class)){
+        if(verbose){
+          print(paste0(p_name, " West"))
+          print(as.character(neighbor_class))
+        }
+        df_coord[paste0(p_name, "west"),] <- c(x1 = x_p - size_y,
+                                               x2 = x_p - size_y,
+                                               y1 = y_p -  size_x,
+                                               y2 = y_p +  size_x
+        )
+      }
+
+
+      ## Check_east
+      data_cr <- center_and_rotate(data, center_x = x_p, center_y = y_p, angle=0, x=x, y=y)
+      neighbor_class <- get_neighbor_class(data_cr)
+
+
+      if(neighbor_class == 0 || is.null(neighbor_class)){
+        if(verbose){
+          print(paste0(p_name, " East"))
+          print(as.character(neighbor_class))
+        }
+        df_coord[paste0(p_name, "east"),] <- c(x1 = x_p + size_y,
+                                               x2 = x_p + size_y,
+                                               y1 = y_p -  size_x,
+                                               y2 = y_p +  size_x
+        )
+      }
+
+      ## North_east
+      data_cr <- center_and_rotate(data, center_x = x_p, center_y = y_p, angle=60, x=x, y=y)
+      neighbor_class <- get_neighbor_class(data_cr)
+
+      if(neighbor_class == 0 || is.null(neighbor_class)){
+        if(verbose){
+          print(paste0(p_name, " North_east"))
+          print(as.character(neighbor_class))
+        }
+        df_coord[paste0(p_name, "north_east"),] <- c(x1 = x_p,
+                                                     x2 = x_p + size_y,
+                                                     y1 = y_p +  size_x,
+                                                     y2 = y_p +  size_x
+        )
+      }
+
+      ## North_west
+      data_cr <- center_and_rotate(data, center_x = x_p, center_y = y_p, angle=120, x=x, y=y)
+      neighbor_class <- get_neighbor_class(data_cr)
+
+      if(neighbor_class == 0 || is.null(neighbor_class)){
+        if(verbose){
+          print(paste0(p_name, " North_west"))
+          print(as.character(neighbor_class))
+        }
+        df_coord[paste0(p_name, "north_west"),] <- c(x1 = x_p -  size_y,
+                                                     x2 = x_p ,
+                                                     y1 = y_p +  size_x,
+                                                     y2 = y_p +  size_x
+        )
+      }
+
+      ## South_west
+      data_cr <- center_and_rotate(data, center_x = x_p, center_y = y_p, angle=240, x=x, y=y)
+      neighbor_class <- get_neighbor_class(data_cr)
+
+      if(neighbor_class == 0 || is.null(neighbor_class)){
+        if(verbose){
+          print(paste0(p_name, " South_west"))
+          print(as.character(neighbor_class))
+        }
+        df_coord[paste0(p_name, "south_west"),] <- c(x1 = x_p - size_y,
+                                                     x2 = x_p,
+                                                     y1 = y_p - size_x,
+                                                     y2 = y_p - size_x
+        )
+      }
+
+      ## South_east
+      data_cr <- center_and_rotate(data, center_x = x_p, center_y = y_p, angle=300, x=x, y=y)
+      neighbor_class <- get_neighbor_class(data_cr)
+
+      if(neighbor_class == 0 || is.null(neighbor_class)){
+        if(verbose){
+          print(paste0(p_name, " South_east"))
+          print(as.character(neighbor_class))
+        }
+        df_coord[paste0(p_name, "South_east"),] <- c(x1 = x_p,
+                                                     x2 = x_p +  size_y,
+                                                     y1 = y_p - size_x,
+                                                     y2 = y_p - size_x
+        )
+      }
+    }
+  }
+
+
+  return(na.omit(df_coord))
+}
