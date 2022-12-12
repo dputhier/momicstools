@@ -4,6 +4,22 @@
 \alias{compute_visium_ortho_hull}
 \title{Compute location of segments used to create an orthogonal hull around points related
 to a particular class.}
+\usage{
+compute_visium_ortho_hull(
+  data,
+  x = "x",
+  y = "y",
+  k = "k",
+  size_x = 4.6,
+  size_y = 5,
+  size_line = 1,
+  step_x = 2.6,
+  step_y = 2.4,
+  color = "black",
+  delta = 0.3,
+  verbose = F
+)
+}
 \arguments{
 \item{x}{the column name storing the x coord}
 
@@ -11,11 +27,11 @@ to a particular class.}
 
 \item{k}{the column name storing the classes (0 not part of the class of interest, 1 part of the class of interest)}
 
+\item{size_x}{the distance between two points on the x axis.}
+
 \item{size_y}{the size of the square (y axis)}
 
 \item{step_y}{the distance between two points on the y axis.}
-
-\item{size_x}{the distance between two points on the x axis.}
 
 \item{delta}{add more or less flexibility to search for neighbor points}
 }
