@@ -12,28 +12,32 @@ compute_visium_ortho_hull(
   k = "k",
   size_x = 4.6,
   size_y = 5,
-  size_line = 1,
   step_x = 2.6,
   step_y = 2.4,
-  color = "black",
   delta = 0.3,
   verbose = F
 )
 }
 \arguments{
+\item{data}{a data.frame.}
+
 \item{x}{the column name storing the x coord}
 
 \item{y}{the column name storing the y coord}
 
 \item{k}{the column name storing the classes (0 not part of the class of interest, 1 part of the class of interest)}
 
-\item{size_x}{the distance between two points on the x axis.}
+\item{size_x}{the size of the square (x axis)}
 
 \item{size_y}{the size of the square (y axis)}
+
+\item{step_x}{the distance between two points on the x axis.}
 
 \item{step_y}{the distance between two points on the y axis.}
 
 \item{delta}{add more or less flexibility to search for neighbor points}
+
+\item{verbose}{whether the function should print (debug) info during processing.}
 }
 \value{
 a dataframe with coordinates x, y, xend, yend (see geom_segments).
@@ -48,6 +52,7 @@ library(Seurat)
 library(SeuratData)
 library(ggplot2)
 InstallData("stxBrain")
+library(ohmiki)
 brain <- LoadData("stxBrain", type = "anterior1")
 brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
 brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
