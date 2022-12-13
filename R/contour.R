@@ -1,14 +1,16 @@
 #' @name compute_visium_ortho_hull
 #' @title Compute location of segments used to create an orthogonal hull around points related
 #' to a particular class.
+#' @param data a data.frame.
 #' @param x the column name storing the x coord
 #' @param y the column name storing the y coord
 #' @param k the column name storing the classes (0 not part of the class of interest, 1 part of the class of interest)
 #' @param size_y the size of the square (y axis)
 #' @param size_x the size of the square (x axis)
 #' @param step_y the distance between two points on the y axis.
-#' @param size_x the distance between two points on the x axis.
+#' @param step_x the distance between two points on the x axis.
 #' @param delta add more or less flexibility to search for neighbor points
+#' @param verbose whether the function should print (debug) info during processing.
 #' @keywords hull, spatial transcriptomics, visium
 #' @return a dataframe with coordinates x, y, xend, yend (see geom_segments).
 #' @examples
@@ -17,6 +19,7 @@
 #' library(SeuratData)
 #' library(ggplot2)
 #' InstallData("stxBrain")
+#' library(ohmiki)
 #' brain <- LoadData("stxBrain", type = "anterior1")
 #' brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
 #' brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
@@ -43,18 +46,14 @@
 #'                inherit.aes = F,
 #'                color="white",
 #'                size=0.7)
-
-
 compute_visium_ortho_hull <- function(data,
                           x="x",
                           y="y",
                           k="k",
                           size_x=4.6,
                           size_y=5,
-                          size_line=1,
                           step_x=2.6,
                           step_y=2.4,
-                          color="black",
                           delta=0.3,
                           verbose=F){
 
@@ -77,7 +76,7 @@ compute_visium_ortho_hull <- function(data,
                              -sin(angle_rad),
                              sin(angle_rad),
                              cos(angle_rad)),
-                           nc=2, byrow = T)
+                           ncol=2, byrow = T)
 
     rotated_mat <- as.matrix(data[, c(x,y)]) %*% rotation_mat
     colnames(rotated_mat) <- c(x,y)
@@ -107,7 +106,7 @@ compute_visium_ortho_hull <- function(data,
 
   if(verbose)
     cat(">> Creating a dataframe to store output.\n")
-  df_coord <- data.frame(matrix(NA, nc=4, nr=4))
+  df_coord <- data.frame(matrix(NA, ncol=4, nrow=4))
   rownames(df_coord) <- sapply("region_name",
                                paste0, "_",
                                c("south", "north", "west", "east"))
@@ -233,5 +232,5 @@ compute_visium_ortho_hull <- function(data,
   }
 
 
-  return(na.omit(df_coord))
+  return(stats::na.omit(df_coord))
 }
