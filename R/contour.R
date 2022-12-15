@@ -108,7 +108,7 @@ compute_visium_ortho_hull <- function(data,
   if(verbose)
     cat(">> Creating a dataframe to store output.\n")
 
-  df_coord <- data.frame(matrix(NA, ncol=6, nrow=4))
+  df_coord <- data.frame(matrix(NA, ncol=4, nrow=6))
   rownames(df_coord) <- sapply("region_name",
                                paste0, "_",
                                c("north_west", "north_east",
