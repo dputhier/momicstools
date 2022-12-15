@@ -17,11 +17,12 @@
 #' cluster_to_show <- 0 # Could be also c(a, b)
 #' coord_spot_brain$k <- ifelse(coord_spot_brain$group %in% cluster_to_show, 1, 0)
 #' border_segments <- compute_visium_ortho_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
-#' compute_dist_to_border <- function(coord_spot, border_segments)
-#'
+#' compute_dist_to_border(coord_spot, border_segments)
+#' @export compute_dist_to_border
 library(spatstat.geom) # to compute segment intersection
 library(pdist)
 library(tibble)
+library(pracma)
 
 # coord_spot <- coord_spot_brain
 
@@ -58,6 +59,9 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
                                               as.matrix(target_point))
 
 
+    window_delta_x <- 10/100 * (max(coord_spot$x) max(coord_spot$x))
+    window_delta_y <- 10/100 * (max(coord_spot$y) max(coord_spot$y))
+
     source_point_and_info$tgt_name <- NA
     source_point_and_info$dist2tgt <- NA
 
@@ -75,17 +79,19 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
                                   y0=coord_spot[coord_spot$k==k1,]$y,
                                   x1=coord_spot[source_point_and_info$tgt_name,]$x,
                                   y1=coord_spot[source_point_and_info$tgt_name,]$y,
-                                  window=owin(xrange=c(min(coord_spot$x), max(coord_spot$x)),
-                                              yrange=c(min(coord_spot$y), max(coord_spot$y))))
+                                  window=owin(xrange=c(min(coord_spot$x - window_delta_x),
+                                                       max(coord_spot$x + window_delta_x)),
+                                              yrange=c(min(coord_spot$y - window_delta_y),
+                                                       max(coord_spot$y + window_delta_y))))
 
     border_segments_psp <- psp(x0=border_segments$x1,
                                y0=border_segments$y1,
                                x1=border_segments$x2,
                                y1=border_segments$y2,
-                               window=owin(xrange=c(min(coord_spot$x), max(coord_spot$x)),
-                                   yrange=c(min(coord_spot$y), max(coord_spot$y))))
-
-
+                               window=owin(xrange=c(min(coord_spot$x - window_delta_x),
+                                                    max(coord_spot$x + window_delta_x)),
+                                           yrange=c(min(coord_spot$y - window_delta_y),
+                                                    max(coord_spot$y + window_delta_y))))
     for(i in 1:nrow(source_point_and_info)){
       tmp <- crossing.psp(border_segments_psp, src_to_tgt_segment_psp[i,])
       source_point_and_info[i,c("x_inter", "y_inter")] <- c(tmp$x, tmp$y)
@@ -105,9 +111,10 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
                                         y0=source_point_and_info$y,
                                         x1=source_point_and_info$x_inter,
                                         y1=source_point_and_info$y_inter,
-                                        window=owin(xrange=c(min(coord_spot$x), max(coord_spot$x)),
-                                                    yrange=c(min(coord_spot$y), max(coord_spot$y))))
-
+                                        window=owin(xrange=c(min(coord_spot$x - window_delta_x),
+                                                             max(coord_spot$x + window_delta_x)),
+                                                    yrange=c(min(coord_spot$y - window_delta_y),
+                                                             max(coord_spot$y + window_delta_y))))
     results[[iter]] <- source_point_and_info
   }
 
