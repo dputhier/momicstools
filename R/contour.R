@@ -58,32 +58,32 @@ compute_visium_ortho_hull <- function(data,
                           delta=0.3,
                           verbose=F){
 
-  center_and_rotate <- function(data, center_x, center_y, angle, x="x", y="y"){
+    center_and_rotate <- function(data, center_x, center_y, angle, x="x", y="y"){
 
-    data[, x] <- data[, x] - center_x
-    data[, y] <- data[, y] - center_y
-    angle_rad <- pi * angle / 180
+      data[, x] <- data[, x] - center_x
+      data[, y] <- data[, y] - center_y
+      angle_rad <- pi * angle / 180
 
-    # center
-    data[p, x] <- data[p, x] - center_x
-    data[p, y] <- data[p, y] - center_y
+      # center
+      data[p, x] <- data[p, x] - center_x
+      data[p, y] <- data[p, y] - center_y
 
-    # size_y and size_x will be half the size:
-    size_y <- size_y / 2
-    size_x <- size_x / 2
+      # size_y and size_x will be half the size:
+      size_y <- size_y / 2
+      size_x <- size_x / 2
 
-    # rotate
-    rotation_mat <- matrix(c(cos(angle_rad),
-                             -sin(angle_rad),
-                             sin(angle_rad),
-                             cos(angle_rad)),
-                           ncol=2, byrow = T)
+      # rotate
+      rotation_mat <- matrix(c(cos(angle_rad),
+                               -sin(angle_rad),
+                               sin(angle_rad),
+                               cos(angle_rad)),
+                             ncol=2, byrow = T)
 
-    rotated_mat <- as.matrix(data[, c(x,y)]) %*% rotation_mat
-    colnames(rotated_mat) <- c(x,y)
-    data[,c(x,y)] <- rotated_mat[,c(x,y)]
+      rotated_mat <- as.matrix(data[, c(x,y)]) %*% rotation_mat
+      colnames(rotated_mat) <- c(x,y)
+      data[,c(x,y)] <- rotated_mat[,c(x,y)]
 
-    return(data)
+      return(data)
   }
 
 
@@ -107,10 +107,13 @@ compute_visium_ortho_hull <- function(data,
 
   if(verbose)
     cat(">> Creating a dataframe to store output.\n")
-  df_coord <- data.frame(matrix(NA, ncol=4, nrow=4))
+
+  df_coord <- data.frame(matrix(NA, ncol=6, nrow=4))
   rownames(df_coord) <- sapply("region_name",
                                paste0, "_",
-                               c("south", "north", "west", "east"))
+                               c("north_west", "north_east",
+                                 "south_east", "south_west",
+                                 "west", "east"))
   colnames(df_coord) <- c("x1", "x2", "y1", "y2")
 
   if(verbose)
@@ -223,7 +226,7 @@ compute_visium_ortho_hull <- function(data,
           print(paste0(p_name, " South_east"))
           print(as.character(neighbor_class))
         }
-        df_coord[paste0(p_name, "South_east"),] <- c(x1 = x_p,
+        df_coord[paste0(p_name, "south_east"),] <- c(x1 = x_p,
                                                      x2 = x_p +  size_x,
                                                      y1 = y_p - size_y,
                                                      y2 = y_p - size_y
