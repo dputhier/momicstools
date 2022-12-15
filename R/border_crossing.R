@@ -59,8 +59,8 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
                                               as.matrix(target_point))
 
 
-    window_delta_x <- 10/100 * (max(coord_spot$x) max(coord_spot$x))
-    window_delta_y <- 10/100 * (max(coord_spot$y) max(coord_spot$y))
+    window_delta_x <- 10/100 * (max(coord_spot$x) - min(coord_spot$x))
+    window_delta_y <- 10/100 * (max(coord_spot$y) - min(coord_spot$y))
 
     source_point_and_info$tgt_name <- NA
     source_point_and_info$dist2tgt <- NA
@@ -123,14 +123,15 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
 
   if(diagnostic_plot){
 
-      ggplot(data=results, mapping=aes(x=x, y=y)) + geom_point() +
-        theme_bw() +
-        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-        geom_segment(data=results, aes(x=x, y=y, xend=tgt_x, yend=tgt_y, color=k), , size=0.3) +
-        geom_segment(data=border_segments,
-                   mapping=aes(x=x1, y=y1, xend=x2, yend=y2), size=0.8, col="black")
-
-
+      p <- ggplot(data=results, mapping=aes(x=x, y=y)) + geom_point() +
+            theme_bw() +
+            theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+            geom_segment(data=results, aes(x=x, y=y, xend=tgt_x, yend=tgt_y, color=k), size=0.3) +
+            geom_segment(data=border_segments,
+                       mapping=aes(x=x1, y=y1, xend=x2, yend=y2), size=0.8, col="black") +
+            geom_segment(data=results,
+                   mapping=aes(x=x, y=y, xend=x_inter, yend=y_inter), col="green", size=0.3)
+     print(p)
 
   }
 
