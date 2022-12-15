@@ -46,6 +46,7 @@
 #'                inherit.aes = F,
 #'                color="white",
 #'                size=0.7)
+#' @export compute_visium_ortho_hull
 compute_visium_ortho_hull <- function(data,
                           x="x",
                           y="y",
@@ -140,10 +141,10 @@ compute_visium_ortho_hull <- function(data,
           print(paste0(p_name, " West"))
           print(as.character(neighbor_class))
         }
-        df_coord[paste0(p_name, "west"),] <- c(x1 = x_p - size_y,
-                                               x2 = x_p - size_y,
-                                               y1 = y_p -  size_x,
-                                               y2 = y_p +  size_x
+        df_coord[paste0(p_name, "west"),] <- c(x1 = x_p - size_x,
+                                               x2 = x_p - size_x,
+                                               y1 = y_p -  size_y,
+                                               y2 = y_p +  size_y
         )
       }
 
@@ -158,10 +159,10 @@ compute_visium_ortho_hull <- function(data,
           print(paste0(p_name, " East"))
           print(as.character(neighbor_class))
         }
-        df_coord[paste0(p_name, "east"),] <- c(x1 = x_p + size_y,
-                                               x2 = x_p + size_y,
-                                               y1 = y_p -  size_x,
-                                               y2 = y_p +  size_x
+        df_coord[paste0(p_name, "east"),] <- c(x1 = x_p + size_x,
+                                               x2 = x_p + size_x,
+                                               y1 = y_p -  size_y,
+                                               y2 = y_p +  size_y
         )
       }
 
@@ -175,9 +176,9 @@ compute_visium_ortho_hull <- function(data,
           print(as.character(neighbor_class))
         }
         df_coord[paste0(p_name, "north_east"),] <- c(x1 = x_p,
-                                                     x2 = x_p + size_y,
-                                                     y1 = y_p +  size_x,
-                                                     y2 = y_p +  size_x
+                                                     x2 = x_p + size_x,
+                                                     y1 = y_p +  size_y,
+                                                     y2 = y_p +  size_y
         )
       }
 
@@ -190,10 +191,10 @@ compute_visium_ortho_hull <- function(data,
           print(paste0(p_name, " North_west"))
           print(as.character(neighbor_class))
         }
-        df_coord[paste0(p_name, "north_west"),] <- c(x1 = x_p -  size_y,
+        df_coord[paste0(p_name, "north_west"),] <- c(x1 = x_p -  size_x,
                                                      x2 = x_p ,
-                                                     y1 = y_p +  size_x,
-                                                     y2 = y_p +  size_x
+                                                     y1 = y_p +  size_y,
+                                                     y2 = y_p +  size_y
         )
       }
 
@@ -206,10 +207,10 @@ compute_visium_ortho_hull <- function(data,
           print(paste0(p_name, " South_west"))
           print(as.character(neighbor_class))
         }
-        df_coord[paste0(p_name, "south_west"),] <- c(x1 = x_p - size_y,
+        df_coord[paste0(p_name, "south_west"),] <- c(x1 = x_p - size_x,
                                                      x2 = x_p,
-                                                     y1 = y_p - size_x,
-                                                     y2 = y_p - size_x
+                                                     y1 = y_p - size_y,
+                                                     y2 = y_p - size_y
         )
       }
 
@@ -223,9 +224,9 @@ compute_visium_ortho_hull <- function(data,
           print(as.character(neighbor_class))
         }
         df_coord[paste0(p_name, "South_east"),] <- c(x1 = x_p,
-                                                     x2 = x_p +  size_y,
-                                                     y1 = y_p - size_x,
-                                                     y2 = y_p - size_x
+                                                     x2 = x_p +  size_x,
+                                                     y1 = y_p - size_y,
+                                                     y2 = y_p - size_y
         )
       }
     }
