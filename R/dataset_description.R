@@ -10,7 +10,7 @@
 #'
 #' @docType data
 #' @keywords datasets
-#' @name coord_brain
-#' @usage data(coord_brain)
+#' @name coord_spot_brain
+#' @usage data(coord_spot_brain)
 #' @format A data frame with 2696 rows and 4 variables
 NULL
