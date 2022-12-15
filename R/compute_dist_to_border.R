@@ -94,7 +94,7 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
                                                     max(coord_spot$y + window_delta_y))))
     for(i in 1:nrow(source_point_and_info)){
       tmp <- crossing.psp(border_segments_psp, src_to_tgt_segment_psp[i,])
-      source_point_and_info[i,c("x_inter", "y_inter")] <- c(tmp$x, tmp$y)
+      source_point_and_info[i,c("x_inter", "y_inter")] <- c(tmp$x[1], tmp$y[1])
     }
 
     for(i in 1:nrow(source_point_and_info)){
