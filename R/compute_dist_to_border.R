@@ -1,4 +1,4 @@
-#' @name compute_border_stats
+#' @name compute_dist_to_border
 #' @title Given a boarder between two spot groups, infer for each spot a: (i) the distance the
 #' closest spot (b) in the other class, (ii) the x/y coordinate of the point lying at the crossing
 #' between the border and (a,b) segment, (iii) the distance to the border.
