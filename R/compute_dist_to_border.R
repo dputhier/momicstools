@@ -28,6 +28,7 @@ getFlippedTissueCoordinates <- function(seurat_obj){
   return(coord_spot)
 }
 
+
 #' @name compute_dist_to_border
 #' @title Given a boarder between two spot groups, infer for each spot a: (i) the distance the
 #' closest spot (b) in the other class, (ii) the x/y coordinate of the point lying at the crossing
@@ -55,11 +56,24 @@ getFlippedTissueCoordinates <- function(seurat_obj){
 #' brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
 #' brain <- FindClusters(brain, verbose = FALSE)
 #' brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
+#' # Select some points (just to give an example)
 #' coord_spot_brain <- getFlippedTissueCoordinates(brain)
 #' coord_spot_brain$k <- 0
 #' coord_spot_brain[SeuratObject::WhichCells(brain, idents=0), ]$k <- 1 # class 0 is the class of interest (labeled 1 against 0 for others)
 #' border_segments <- compute_visium_ortho_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
 #' dist_to_border <- compute_dist_to_border(coord_spot_brain, border_segments)
+#' brain[["dist2border"]] <- dist_to_border$dist2_inter
+#' SpatialFeaturePlot(brain,
+#'          features = "dist2border") +
+#'          #'   theme_bw() +
+#'          geom_segment(data=border_segments,
+#'                mapping=aes(x=x1,
+#'                            y=y1,
+#'                            xend=x2,
+#'                            yend=y2),
+#'                inherit.aes = F,
+#'                color="white",
+#'                size=0.7)
 #' @export compute_dist_to_border
 compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=TRUE){
 
@@ -96,9 +110,6 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
 
     window_delta_x <- 10/100 * (max(coord_spot$x) - min(coord_spot$x))
     window_delta_y <- 10/100 * (max(coord_spot$y) - min(coord_spot$y))
-
-    source_point_and_info$tgt_name <- NA
-    source_point_and_info$dist2tgt <- NA
 
     for(i in 1:nrow(source_point_and_info)){
       pos <- which(dist_to_point_from_other_class[i,] == min(dist_to_point_from_other_class[i,]))[1]
@@ -154,8 +165,12 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
     results[[iter]] <- source_point_and_info
   }
 
+  rn <- c(rownames(results[[1]]), rownames(results[[2]]))
+  print(rn)
+  print(order(as.numeric(rn)))
   results <- rbind(results[[1]], results[[2]])
   results$k <- as.factor(results$k)
+  results <- results[order(as.numeric(rn)),]
 
   if(diagnostic_plot){
 
