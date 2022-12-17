@@ -1,3 +1,33 @@
+#' @name getFlippedTissueCoordinates()
+#' @title Seurat object internally store spot coordinates (see Seurat::GetTissueCoordinates()). However, at least in the case of Visium,
+#'  data are flipped and rotated before SpatialDimPlot. This function  return the rotated/flipped tissue Coordinates from
+#'  a Seurat object.
+#' @param seurat_obj a seurat object with tissue coordinates.
+#' @return a dataframe with the following columns: x (x coordinate), y (y coordinate),
+#' @examples
+#' #' ## Install and process the brain dataset
+#' library(Seurat)
+#' library(SeuratData)
+#' library(ggplot2)
+#' InstallData("stxBrain")
+#' library(ohmiki)
+#' brain <- LoadData("stxBrain", type = "anterior1")
+#' brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
+#' brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
+#' brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
+#' brain <- FindClusters(brain, verbose = FALSE)
+#' brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
+#'
+#' @export getFlippedTissueCoordinates
+getFlippedTissueCoordinates <- function(seurat_obj){
+  coord_spot <- GetTissueCoordinates(seurat_obj)[,2:1] # rotation
+  colnames(coord_spot) <- c("x", "y")
+  min_coord_y <- min(coord_spot$y)
+  max_coord_y <- max(coord_spot$y)
+  coord_spot$y <- -coord_spot$y + 2*min_coord_y + max_coord_y-min_coord_y
+  return(coord_spot)
+}
+
 #' @name compute_dist_to_border
 #' @title Given a boarder between two spot groups, infer for each spot a: (i) the distance the
 #' closest spot (b) in the other class, (ii) the x/y coordinate of the point lying at the crossing
@@ -13,19 +43,24 @@
 #' intersection with the border), dist2_inter (the distance to the intersection with the border),
 #' k (input k).
 #' @examples
-#' data(coord_spot_brain)
-#' cluster_to_show <- 0 # Could be also c(a, b)
-#' coord_spot_brain$k <- ifelse(coord_spot_brain$group %in% cluster_to_show, 1, 0)
+#' #' ## Install and process the brain dataset
+#' library(Seurat)
+#' library(SeuratData)
+#' library(ggplot2)
+#' InstallData("stxBrain")
+#' library(ohmiki)
+#' brain <- LoadData("stxBrain", type = "anterior1")
+#' brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
+#' brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
+#' brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
+#' brain <- FindClusters(brain, verbose = FALSE)
+#' brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
+#' coord_spot_brain <- getFlippedTissueCoordinates(brain)
+#' coord_spot_brain$k <- 0
+#' coord_spot_brain[SeuratObject::WhichCells(brain, idents=0), ]$k <- 1 # class 0 is the class of interest (labeled 1 against 0 for others)
 #' border_segments <- compute_visium_ortho_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
-#' compute_dist_to_border(coord_spot, border_segments)
+#' dist_to_border <- compute_dist_to_border(coord_spot_brain, border_segments)
 #' @export compute_dist_to_border
-library(spatstat.geom) # to compute segment intersection
-library(pdist)
-library(tibble)
-library(pracma)
-
-# coord_spot <- coord_spot_brain
-
 compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=TRUE){
 
   rownames(coord_spot) <- 1:nrow(coord_spot)
@@ -55,8 +90,8 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
     source_point_and_info$k <- NA
 
     target_point <- coord_spot[coord_spot$k==k2, 1:2]
-    dist_to_point_from_other_class <- distmat(as.matrix(source_point_and_info[,c("x", "y")]),
-                                              as.matrix(target_point))
+    dist_to_point_from_other_class <- pracma::distmat(as.matrix(source_point_and_info[,c("x", "y")]),
+                                                      as.matrix(target_point))
 
 
     window_delta_x <- 10/100 * (max(coord_spot$x) - min(coord_spot$x))
@@ -68,32 +103,33 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
     for(i in 1:nrow(source_point_and_info)){
       pos <- which(dist_to_point_from_other_class[i,] == min(dist_to_point_from_other_class[i,]))[1]
       source_point_and_info[i,c("tgt_name", "tgt_x", "tgt_y", "dist2tgt", "k")] <- c(as.integer(names(pos)),
-                                                                                coord_spot$x[as.integer(names(pos))],
-                                                                                coord_spot$y[as.integer(names(pos))],
-                                                                                dist_to_point_from_other_class[i,pos],
-                                                                                iter-1)
+                                                                                      coord_spot$x[as.integer(names(pos))],
+                                                                                      coord_spot$y[as.integer(names(pos))],
+                                                                                      dist_to_point_from_other_class[i,pos],
+                                                                                      iter-1)
     }
 
 
-    src_to_tgt_segment_psp <- psp(x0=coord_spot[coord_spot$k==k1,]$x,
-                                  y0=coord_spot[coord_spot$k==k1,]$y,
-                                  x1=coord_spot[source_point_and_info$tgt_name,]$x,
-                                  y1=coord_spot[source_point_and_info$tgt_name,]$y,
-                                  window=owin(xrange=c(min(coord_spot$x - window_delta_x),
-                                                       max(coord_spot$x + window_delta_x)),
-                                              yrange=c(min(coord_spot$y - window_delta_y),
-                                                       max(coord_spot$y + window_delta_y))))
+    src_to_tgt_segment_psp <- spatstat.geom::psp(x0=coord_spot[coord_spot$k==k1,]$x,
+                                                  y0=coord_spot[coord_spot$k==k1,]$y,
+                                                  x1=coord_spot[source_point_and_info$tgt_name,]$x,
+                                                  y1=coord_spot[source_point_and_info$tgt_name,]$y,
+                                                  window=spatstat.geom::owin(xrange=c(min(coord_spot$x - window_delta_x),
+                                                                                       max(coord_spot$x + window_delta_x)),
+                                                                              yrange=c(min(coord_spot$y - window_delta_y),
+                                                                                       max(coord_spot$y + window_delta_y))))
 
-    border_segments_psp <- psp(x0=border_segments$x1,
-                               y0=border_segments$y1,
-                               x1=border_segments$x2,
-                               y1=border_segments$y2,
-                               window=owin(xrange=c(min(coord_spot$x - window_delta_x),
-                                                    max(coord_spot$x + window_delta_x)),
-                                           yrange=c(min(coord_spot$y - window_delta_y),
-                                                    max(coord_spot$y + window_delta_y))))
+    border_segments_psp <- spatstat.geom::psp(x0=border_segments$x1,
+                                               y0=border_segments$y1,
+                                               x1=border_segments$x2,
+                                               y1=border_segments$y2,
+                                               window=spatstat.geom::owin(xrange=c(min(coord_spot$x - window_delta_x),
+                                                                                          max(coord_spot$x + window_delta_x)),
+                                                                                 yrange=c(min(coord_spot$y - window_delta_y),
+                                                                                          max(coord_spot$y + window_delta_y))))
     for(i in 1:nrow(source_point_and_info)){
-      tmp <- crossing.psp(border_segments_psp, src_to_tgt_segment_psp[i,])
+      tmp <- spatstat.geom::crossing.psp(border_segments_psp,
+                                         src_to_tgt_segment_psp[i,])
       source_point_and_info[i,c("x_inter", "y_inter")] <- c(tmp$x[1], tmp$y[1])
     }
 
@@ -107,14 +143,14 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
     }
 
 
-    src_to_intersect_segment_psp <- psp(x0=source_point_and_info$x,
-                                        y0=source_point_and_info$y,
-                                        x1=source_point_and_info$x_inter,
-                                        y1=source_point_and_info$y_inter,
-                                        window=owin(xrange=c(min(coord_spot$x - window_delta_x),
-                                                             max(coord_spot$x + window_delta_x)),
-                                                    yrange=c(min(coord_spot$y - window_delta_y),
-                                                             max(coord_spot$y + window_delta_y))))
+    src_to_intersect_segment_psp <- spatstat.geom::psp(x0=source_point_and_info$x,
+                                                        y0=source_point_and_info$y,
+                                                        x1=source_point_and_info$x_inter,
+                                                        y1=source_point_and_info$y_inter,
+                                                        window=spatstat.geom::owin(xrange=c(min(coord_spot$x - window_delta_x),
+                                                                                             max(coord_spot$x + window_delta_x)),
+                                                                                    yrange=c(min(coord_spot$y - window_delta_y),
+                                                                                             max(coord_spot$y + window_delta_y))))
     results[[iter]] <- source_point_and_info
   }
 
@@ -123,16 +159,20 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
 
   if(diagnostic_plot){
 
-      p <- ggplot(data=results, mapping=aes(x=x, y=y)) + geom_point() +
-            theme_bw() +
-            theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
-            geom_segment(data=results, aes(x=x, y=y, xend=tgt_x, yend=tgt_y, color=k), size=0.3) +
-            geom_segment(data=border_segments,
-                       mapping=aes(x=x1, y=y1, xend=x2, yend=y2), size=0.8, col="black") +
-            geom_segment(data=results,
-                   mapping=aes(x=x, y=y, xend=x_inter, yend=y_inter), col="green", size=0.3)
-     print(p)
+      p1 <- ggplot2::ggplot(data=results, mapping=aes(x=x, y=y)) + geom_point() +
+              theme_bw() +
+              theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+              geom_segment(data=results, aes(x=x, y=y, xend=tgt_x, yend=tgt_y, color=k), size=0.3) +
+              geom_segment(data=border_segments,
+                         mapping=aes(x=x1, y=y1, xend=x2, yend=y2), size=0.8, col="black") +
+              geom_segment(data=results,
+                     mapping=aes(x=x, y=y, xend=x_inter, yend=y_inter), col="green", size=0.3)
 
+      p2 <- ggplot(data=results, mapping=aes(x=x,y=y,
+                                       col=log2(dist2_inter))
+             ) + geom_point() + scale_colour_gradientn(colours = c("red","yellow","green","lightblue","darkblue"))
+
+      print(p1 + p2)
   }
 
   return(results)
