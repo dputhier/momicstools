@@ -1,4 +1,4 @@
-#' @name getFlippedTissueCoordinates()
+#' @name getFlippedTissueCoordinates
 #' @title Seurat object internally store spot coordinates (see Seurat::GetTissueCoordinates()). However, at least in the case of Visium,
 #'  data are flipped and rotated before SpatialDimPlot. This function  return the rotated/flipped tissue Coordinates from
 #'  a Seurat object.
@@ -27,7 +27,6 @@ getFlippedTissueCoordinates <- function(seurat_obj){
   coord_spot$y <- -coord_spot$y + 2*min_coord_y + max_coord_y-min_coord_y
   return(coord_spot)
 }
-
 
 #' @name compute_dist_to_border
 #' @title Given a boarder between two spot groups, infer for each spot a: (i) the distance the
