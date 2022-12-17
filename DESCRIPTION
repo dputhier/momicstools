@@ -17,9 +17,9 @@ Imports: ggplot2,
         tibble,
         pracma,
         patchwork,
-        SeuratObject
+        SeuratObject,
+        Seurat
 Suggests:
-    Seurat,
     SeuratData,
     testthat (>= 3.0.0)
 LazyData: true
