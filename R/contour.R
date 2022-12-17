@@ -31,7 +31,7 @@
 #' coord_st_data <- ggplot_build(spatial_plot)$data[[1]][,c("x", "y", "group")]
 #' coord_st_data$group <- coord_st_data$group - 1 # group are 1-based in ggplot compare to seurat
 #' ## Cluster 0 is, for instance, the cluster of interest.
-#' cluster_to_show <- 7 # Could be also c(a, b)
+#' cluster_to_show <- 0 # Could be also c(a, b)
 #' coord_st_data$k <- ifelse(coord_st_data$group %in% cluster_to_show, 1, 0)
 #' ## Compute the segments of the hull.
 #' path <- compute_visium_ortho_hull(coord_st_data, size_x=3.2, size_y=3.6, delta=0.5)
