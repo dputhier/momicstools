@@ -2,3 +2,4 @@
 
 export(compute_dist_to_border)
 export(compute_visium_ortho_hull)
+export(getFlippedTissueCoordinates)
