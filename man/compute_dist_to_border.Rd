@@ -41,11 +41,24 @@ brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
 brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
 brain <- FindClusters(brain, verbose = FALSE)
 brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
+# Select some points (just to give an example)
 coord_spot_brain <- getFlippedTissueCoordinates(brain)
 coord_spot_brain$k <- 0
 coord_spot_brain[SeuratObject::WhichCells(brain, idents=0), ]$k <- 1 # class 0 is the class of interest (labeled 1 against 0 for others)
 border_segments <- compute_visium_ortho_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
 dist_to_border <- compute_dist_to_border(coord_spot_brain, border_segments)
+brain[["dist2border"]] <- dist_to_border$dist2_inter
+SpatialFeaturePlot(brain,
+         features = "dist2border") +
+         #'   theme_bw() +
+         geom_segment(data=border_segments,
+               mapping=aes(x=x1,
+                           y=y1,
+                           xend=x2,
+                           yend=y2),
+               inherit.aes = F,
+               color="white",
+               size=0.7)
 }
 \keyword{border,}
 \keyword{hull,}
