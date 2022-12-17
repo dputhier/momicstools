@@ -5,6 +5,9 @@
 \title{Given a boarder between two spot groups, infer for each spot a: (i) the distance the
 closest spot (b) in the other class, (ii) the x/y coordinate of the point lying at the crossing
 between the border and (a,b) segment, (iii) the distance to the border.}
+\usage{
+compute_dist_to_border(coord_spot, border_segments, diagnostic_plot = TRUE)
+}
 \arguments{
 \item{coord_spot}{a data.frame with spot coordinates (columns "x" and "y") and a column k (0 or 1) giving the class of the spot.}
 
@@ -26,11 +29,23 @@ closest spot (b) in the other class, (ii) the x/y coordinate of the point lying 
 between the border and (a,b) segment, (iii) the distance to the border.
 }
 \examples{
-data(coord_spot_brain)
-cluster_to_show <- 0 # Could be also c(a, b)
-coord_spot_brain$k <- ifelse(coord_spot_brain$group \%in\% cluster_to_show, 1, 0)
+#' ## Install and process the brain dataset
+library(Seurat)
+library(SeuratData)
+library(ggplot2)
+InstallData("stxBrain")
+library(ohmiki)
+brain <- LoadData("stxBrain", type = "anterior1")
+brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
+brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
+brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
+brain <- FindClusters(brain, verbose = FALSE)
+brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
+coord_spot_brain <- getFlippedTissueCoordinates(brain)
+coord_spot_brain$k <- 0
+coord_spot_brain[SeuratObject::WhichCells(brain, idents=0), ]$k <- 1 # class 0 is the class of interest (labeled 1 against 0 for others)
 border_segments <- compute_visium_ortho_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
-compute_dist_to_border(coord_spot, border_segments)
+dist_to_border <- compute_dist_to_border(coord_spot_brain, border_segments)
 }
 \keyword{border,}
 \keyword{hull,}
