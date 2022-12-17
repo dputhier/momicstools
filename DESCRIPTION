@@ -11,8 +11,14 @@ Authors@R:
 Description: This package implements a set of function for spatial multi-omics. Depending on our needs...
 License: MIT + file LICENSE
 Encoding: UTF-8
+Imports: ggplot2, 
+        spatstat.geom,
+        pdist,
+        tibble,
+        pracma,
+        patchwork,
+        SeuratObject
 Suggests:
-    ggplot2,
     Seurat,
     SeuratData,
     testthat (>= 3.0.0)
