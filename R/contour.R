@@ -46,17 +46,17 @@
 #'                inherit.aes = F,
 #'                color="white",
 #'                size=0.7)
-#' @export compute_visium_ortho_hull
+#'@export compute_visium_ortho_hull
 compute_visium_ortho_hull <- function(data,
-                          x="x",
-                          y="y",
-                          k="k",
-                          size_x=4.6,
-                          size_y=5,
-                          step_x=2.6,
-                          step_y=2.4,
-                          delta=0.3,
-                          verbose=F){
+                                      x="x",
+                                      y="y",
+                                      k="k",
+                                      size_x=4.6,
+                                      size_y=5,
+                                      step_x=2.6,
+                                      step_y=2.4,
+                                      delta=0.3,
+                                      verbose=F){
 
     center_and_rotate <- function(data, center_x, center_y, angle, x="x", y="y"){
 
