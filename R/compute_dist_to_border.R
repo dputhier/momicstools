@@ -1,40 +1,10 @@
-#' @name getFlippedTissueCoordinates
-#' @title Seurat object internally store spot coordinates (see Seurat::GetTissueCoordinates()). However, at least in the case of Visium,
-#'  data are flipped and rotated before SpatialDimPlot. This function  return the rotated/flipped tissue Coordinates from
-#'  a Seurat object.
-#' @param seurat_obj a seurat object with tissue coordinates.
-#' @return a dataframe with the following columns: x (x coordinate), y (y coordinate),
-#' @examples
-#' #' ## Install and process the brain dataset
-#' library(Seurat)
-#' library(SeuratData)
-#' library(ggplot2)
-#' InstallData("stxBrain")
-#' library(ohmiki)
-#' brain <- LoadData("stxBrain", type = "anterior1")
-#' brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
-#' brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
-#' brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
-#' brain <- FindClusters(brain, verbose = FALSE)
-#' brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
-#'
-#' @export getFlippedTissueCoordinates
-getFlippedTissueCoordinates <- function(seurat_obj){
-  coord_spot <- GetTissueCoordinates(seurat_obj)[,2:1] # rotation
-  colnames(coord_spot) <- c("x", "y")
-  min_coord_y <- min(coord_spot$y)
-  max_coord_y <- max(coord_spot$y)
-  coord_spot$y <- -coord_spot$y + 2*min_coord_y + max_coord_y-min_coord_y
-  return(coord_spot)
-}
-
 #' @name compute_dist_to_border
 #' @title Given a boarder between two spot groups, infer for each spot a: (i) the distance the
 #' closest spot (b) in the other class, (ii) the x/y coordinate of the point lying at the crossing
 #' between the border and (a,b) segment, (iii) the distance to the border.
 #' @param coord_spot a data.frame with spot coordinates (columns "x" and "y") and a column k (0 or 1) giving the class of the spot.
 #' @param border_segments a data.frame as produce by compute_visium_ortho_hull.
-#' @param diagnostic_plot Whether to produce a diagnostic diagram. Highly recommanded to visualy inspect the results.
+#' @param diagnostic_plot Whether to produce a diagnostic diagram. Highly recommanded to visually inspect the results.
 #' @keywords hull, spatial transcriptomics, visium, border, spot.
 #' @return a dataframe with the following columns: x (input x coordinate), y (input y coordinate),
 #' tgt_name (the name/index of the closest spot), tgt_x (the x coordinate of the closest spot),
@@ -43,18 +13,11 @@ getFlippedTissueCoordinates <- function(seurat_obj){
 #' intersection with the border), dist2_inter (the distance to the intersection with the border),
 #' k (input k).
 #' @examples
-#' #' ## Install and process the brain dataset
+#' #' #' library(SeuratData)
 #' library(Seurat)
-#' library(SeuratData)
-#' library(ggplot2)
-#' InstallData("stxBrain")
-#' library(ohmiki)
-#' brain <- LoadData("stxBrain", type = "anterior1")
-#' brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
-#' brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
-#' brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
-#' brain <- FindClusters(brain, verbose = FALSE)
-#' brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
+#' #InstallData("stxBrain")
+#' anterior1 <- LoadData("stxBrain", type = "anterior1")
+#' anterior1 <- preprocess_seurat_data(anterior1, normalization_method = "SCTransform")
 #' # Select some points (just to give an example)
 #' coord_spot_brain <- getFlippedTissueCoordinates(brain)
 #' coord_spot_brain$k <- 0
@@ -184,7 +147,11 @@ compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=
 
       p2 <- ggplot(data=results, mapping=aes(x=x,y=y,
                                        col=log2(dist2_inter))
-             ) + geom_point() + scale_colour_gradientn(colours = c("red","yellow","green","lightblue","darkblue"))
+             ) +
+        theme_bw() +
+        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) +
+        geom_point() +
+        scale_colour_gradientn(colours = c("red","yellow","green","lightblue","darkblue"))
 
       print(p1 + p2)
   }

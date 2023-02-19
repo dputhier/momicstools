@@ -13,7 +13,7 @@ compute_dist_to_border(coord_spot, border_segments, diagnostic_plot = TRUE)
 
 \item{border_segments}{a data.frame as produce by compute_visium_ortho_hull.}
 
-\item{diagnostic_plot}{Whether to produce a diagnostic diagram. Highly recommanded to visualy inspect the results.}
+\item{diagnostic_plot}{Whether to produce a diagnostic diagram. Highly recommanded to visually inspect the results.}
 }
 \value{
 a dataframe with the following columns: x (input x coordinate), y (input y coordinate),
@@ -29,18 +29,11 @@ closest spot (b) in the other class, (ii) the x/y coordinate of the point lying 
 between the border and (a,b) segment, (iii) the distance to the border.
 }
 \examples{
-#' ## Install and process the brain dataset
+#' #' library(SeuratData)
 library(Seurat)
-library(SeuratData)
-library(ggplot2)
-InstallData("stxBrain")
-library(ohmiki)
-brain <- LoadData("stxBrain", type = "anterior1")
-brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
-brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
-brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
-brain <- FindClusters(brain, verbose = FALSE)
-brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
+#InstallData("stxBrain")
+anterior1 <- LoadData("stxBrain", type = "anterior1")
+anterior1 <- preprocess_seurat_data(anterior1, normalization_method = "SCTransform")
 # Select some points (just to give an example)
 coord_spot_brain <- getFlippedTissueCoordinates(brain)
 coord_spot_brain$k <- 0

@@ -1,15 +1,10 @@
-Package: ohmiki
+Package: momicstools
 Title: Our helpful multi-omics tool kit
 Version: 0.1
-Authors@R: 
-    c(person("Denis", "Puthier",
-           role = c("aut", "cre"),
-           email = "denis.puthier@univ-amu.fr"),
-       person("Arnauld", "Sergé",
-           role = c("aut"),
-           email = "arnauld.serge@inserm.fr"))
-Description: This package implements a set of function for spatial multi-omics. Depending on our needs...
+Description: This package implements a set of function for spatial multi-omics.
 License: MIT + file LICENSE
+Author: D. Puthier
+Maintainer: D. Puthier <denis.puthier@univ-amu.fr>
 Encoding: UTF-8
 Imports: ggplot2, 
         spatstat.geom,
@@ -24,7 +19,7 @@ Suggests:
     testthat (>= 3.0.0)
 LazyData: true
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.1.1
+RoxygenNote: 7.2.3
 Config/testthat/edition: 3
 Depends: 
     R (>= 2.10)

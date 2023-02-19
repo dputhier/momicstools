@@ -46,7 +46,7 @@
 #'                inherit.aes = F,
 #'                color="white",
 #'                size=0.7)
-#'@export compute_visium_ortho_hull
+#' @export compute_visium_ortho_hull
 compute_visium_ortho_hull <- function(data,
                                       x="x",
                                       y="y",

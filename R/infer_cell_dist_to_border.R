@@ -1,49 +1,42 @@
 #' @name infer_cell_dist_to_border
-#' @title Given a list of vectors containing cell markers, infer the relative location
-#' @param data a data.frame.
-#' @param x the column name storing the x coord
-#' @param y the column name storing the y coord
-#' @param k the column name storing the classes (0 not part of the class of interest, 1 part of the class of interest)
-#' @param size_y the size of the square (y axis)
-#' @param size_x the size of the square (x axis)
-#' @param step_y the distance between two points on the y axis.
-#' @param step_x the distance between two points on the x axis.
-#' @param delta add more or less flexibility to search for neighbor points
-#' @param verbose whether the function should print (debug) info during processing.
-#' @keywords hull, spatial transcriptomics, visium
+#' @title Given a list of vectors containing cell markers, infer the relative location of cell relative to border.
+#' @param seurat_object a Seurat object
+#' @param dist_to_border a dataframe produced by compute_dist_to_border().
+#' @keywords distance, spots, spatial transcriptomics, visium
 #' @return a dataframe with coordinates x, y, xend, yend (see geom_segments).
 #' @examples
 #' ## Install and process the brain dataset
-#' library(Seurat)
 #' library(SeuratData)
 #' library(ggplot2)
-#' InstallData("stxBrain")
-#' library(ohmiki)
+#' #InstallData("stxBrain")
 #' brain <- LoadData("stxBrain", type = "anterior1")
+#' brain <- preprocess(brain, normalization="sct")
 #' brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
 #' brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
 #' brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
 #' brain <- FindClusters(brain, verbose = FALSE)
 #' brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
-#' spatial_plot <- SpatialDimPlot(brain, label = TRUE, label.size = 3, pt.size.factor = 1.5)
-#' ## Retrieve x/y coordinates and group from ggplot object
-#' coord_st_data <- ggplot_build(spatial_plot)$data[[1]][,c("x", "y", "group")]
-#' coord_st_data$group <- coord_st_data$group - 1 # group are 1-based in ggplot compare to seurat
-#' ## Cluster 0 is, for instance, the cluster of interest.
-#' cluster_to_show <- 0 # Could be also c(a, b)
-#' coord_st_data$k <- ifelse(coord_st_data$group %in% cluster_to_show, 1, 0)
-#' ## Compute the segments of the hull.
-#' path <- compute_visium_ortho_hull(coord_st_data, size_x=3.2, size_y=3.6, delta=0.5)
-#' ## Add the segments to the ggplot diagram
-#' spatial_plot +
-#'   theme_bw() +
-#'   geom_segment(data=path,
-#'                mapping=aes(x=x1,
-#'                            y=y1,
-#'                            xend=x2,
-#'                            yend=y2),
-#'                inherit.aes = F,
-#'                color="white",
-#'                size=0.7)
-#' @export compute_visium_ortho_hull
-compute_visium_ortho_hull <- function(data,
+#' # Select some points (just to give an example)
+#' coord_spot_brain <- getFlippedTissueCoordinates(brain)
+#' coord_spot_brain$k <- 0
+#' coord_spot_brain[SeuratObject::WhichCells(brain, idents=0), ]$k <- 1 # class 0 is the class of interest (labeled 1 against 0 for others)
+#' border_segments <- compute_visium_ortho_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
+#' dist_to_border <- compute_dist_to_border(coord_spot_brain, border_segments)
+#' markers <- list(c("A", "B", "C"), c("D", "E", "F" ))
+#' infer_cell_dist_to_border(brain, dist_to_border, markers)
+#' @export infer_cell_dist_to_border
+infer_cell_dist_to_border <- function(seurat_object,
+                                      dist_to_border,
+                                      markers,
+                                      name="dist2border",
+                                      dist_quantiles=seq(from=0, to=100, by=10)){
+
+
+}
+
+# ...
+#dist_to_border[dist_to_border$k==0, 'dist2_inter'] <- -dist_to_border[dist_to_border$k==0, 'dist2_inter']
+#cut(dist_to_border$dist2_inter, 6)
+#brain[["dist2border"]] <- dist_to_border$dist2_inter
+#brain[["dist2border_class"]] <-ggplot2::cut_interval(sort(dist_to_border$dist2_inter), 10)
+#plot(sort(dist_to_border$dist2_inter))
