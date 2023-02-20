@@ -14,7 +14,7 @@ plot_xy_intensity_panel(
   legend = TRUE,
   pt_size = 2.1,
   pt_shape = 16,
-  colours = c("#A9D6E5", "#2166AC", "#000000", "#B2182B", "#FFCA3A")
+  colours = colors_for_gradient("J1")
 )
 }
 \arguments{

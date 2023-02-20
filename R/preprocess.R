@@ -10,6 +10,7 @@
 #' @param dims The number of dimensions to use in the PCA analysis. Defaults to 50.
 #' @param resolution The resolution parameter for clustering. Defaults to 0.6.
 #' @param n.neighbors The number of neighbors for the FindNeighbors step. Defaults to 30.
+#' @param approx Use truncated singular value decomposition to approximate PCA.
 #' @param seed An optional seed for reproducibility.
 #'
 #' @return A preprocessed Seurat object.
@@ -37,10 +38,11 @@ preprocess_seurat_data <- function(seurat_obj,
                                    n.features = 2000, 
                                    dims = 50, 
                                    resolution = 0.6, 
-                                   n.neighbors = 30, 
+                                   n.neighbors = 30,
+                                   approx=TRUE,
                                    seed = NULL) {
   
-  normalization_method <- match.args(normalization_method)
+  normalization_method <- match.arg(normalization_method)
   
   # Normalize the data
   if("Spatial" %in% names(seurat_obj)){
@@ -59,10 +61,16 @@ preprocess_seurat_data <- function(seurat_obj,
                                         scale.factor = 10000)
   }
   
+  # Find Variable Features and Scale
+  seurat_obj <- FindVariableFeatures(seurat_obj, nfeatures = n.features)
+  
+  seurat_obj <- ScaleData(seurat_obj)
+  
   # Run PCA
   seurat_obj <- Seurat::RunPCA(seurat_obj, 
                                npcs = n.features, 
-                               verbose = FALSE)
+                               verbose = FALSE,
+                               approx = approx)
   
   # Find neighbors
   seurat_obj <- Seurat::FindNeighbors(seurat_obj, dims = 1:dims, 

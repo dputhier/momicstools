@@ -1,9 +1,9 @@
 #################################################################
 ##    set_verbosity
 #################################################################
-#' Set the verbosity level for the momicstools package
+#' Set the verbosity level for the scomicstools package
 #'
-#' This function sets the verbosity level for the momicstools package,
+#' This function sets the verbosity level for the scomicstools package,
 #' which controls the amount of information that is printed to the console by
 #' the \code{\link{print_msg}} function. The verbosity level can be set to
 #'  any non-negative integer, with higher values indicating more detailed output.
@@ -29,7 +29,7 @@
 set_verbosity <- function(verbosity_value) {
   if (!is.null(verbosity_value) &
       verbosity_value >= 0 & is.numeric(verbosity_value)) {
-    options(momicstools_verbosity = verbosity_value)
+    options(scomicstools_verbosity = verbosity_value)
   }
 }
 
@@ -38,7 +38,7 @@ set_verbosity <- function(verbosity_value) {
 #################################################################
 #' Get the current verbosity level.
 #'
-#' This function get the verbosity level of the momicstools package which
+#' This function get the verbosity level of the scomicstools package which
 #' controls the amount of information that is printed to the console by
 #' the \code{\link{print_msg}} function.
 #'
@@ -52,10 +52,10 @@ set_verbosity <- function(verbosity_value) {
 #'
 
 get_verbosity <- function() {
-  if (is.null(unlist(options()["momicstools_verbosity"]))) {
-    options(momicstools_verbosity = 1)
+  if (is.null(unlist(options()["scomicstools_verbosity"]))) {
+    options(scomicstools_verbosity = 1)
   }
-  return(options()$momicstools_verbosity)
+  return(options()$scomicstools_verbosity)
 }
 
 #################################################################
@@ -85,14 +85,14 @@ get_verbosity <- function() {
 print_msg <-
   function(msg,
            msg_type = c("INFO", "DEBUG", "WARNING", "STOP")) {
-    if (is.null(unlist(options()["momicstools_verbosity"]))) {
-      options(momicstools_verbosity = 1)
+    if (is.null(unlist(options()["scomicstools_verbosity"]))) {
+      options(scomicstools_verbosity = 1)
     }
     if (msg_type == "INFO")
-      if (unlist(options()["momicstools_verbosity"]) > 0)
+      if (unlist(options()["scomicstools_verbosity"]) > 0)
         cat(paste("|-- INFO : ", msg, "\n"))
     if (msg_type == "DEBUG")
-      if (unlist(options()["momicstools_verbosity"]) > 1)
+      if (unlist(options()["scomicstools_verbosity"]) > 1)
         cat(paste("|-- DEBUG : ", msg, "\n"))
     if (msg_type == "WARNING")
       warning("|-- WARNING : ", msg, call. = FALSE)
@@ -158,3 +158,50 @@ print_stat <-
     print_msg(paste0(msg, ": ", stats), msg_type = msg_type)
     
   }
+
+#################################################################
+##    print_stat
+#################################################################
+#' Generate a vector of colors for a gradient
+#'
+#' This function generates a vector of colors for a gradient, given 
+#' a specified palette name.
+#'
+#' @param palette A character vector specifying the palette to use. One of: "Je1", 
+#' "Seurat_like", "Ju1", "De1",  "De2", "De3", "De4", "De5", "De6", "De7", "De8".
+#' @return A character vector of color codes.
+#' @export colors_for_gradient
+#' @examples
+#' colors_for_gradient()
+#' colors_for_gradient(palette = "Seurat_like")
+#' 
+colors_for_gradient <- function(palette=c("Je1", "Seurat_like", "Ju1", "De1", 
+                                          "De2", "De3", "De4", "De5",
+                                          "De6", "De7", "De8")){
+  if(palette == "Seurat_like"){
+    return(c("#5D50A3", "#9FD7A4", "#FBFDBA", "#FEB163", "#A80B44"))
+  }else if(palette == "Ju1"){
+    return(c("#A9D6E5", "#2166AC", "#000000", "#B2182B", "#FFCA3A"))
+  }else if(palette == "De1"){
+    return(c("#d73027","#fc8d59","#fee090","#e0f3f8","#91bfdb","#253494"))
+  }else if(palette == "De2"){
+    return(c("#FFF7FB","#ECE2F0","#D0D1E6","#A6BDDB","#67A9CF","#3690C0","#02818A","#016450"))
+  }else if(palette == "De3"){
+    return(c("#1A1835","#15464E","#2B6F39","#757B33","#C17A70","#D490C6","#C3C1F2","#CFEBEF'"))
+  }else if(palette == "De4"){
+    return(c("#0000FF","#00FFFF","#80FF80","#FFFF00","#FF0000"))
+  }else if(palette == "De5"){
+    return(c("#0000AA","#0000FF","#00FFFF","#80FF80","#FFFF00","#FF0000","#AA0000"))
+  }else if(palette == "De6"){
+    return(c("#4575b4","#74add1","#abd9e9","#e0f3f8","#fee090","#fdae61","#f46d43","#d73027"))
+  }else if(palette == "De7"){
+    return(c("#67001f","#b2182b","#d6604d","#f4a582","#fddbc7","#f7f7f7","#d1e5f0","#92c5de","#4393c3","#2166ac","#053061"))
+  }else if(palette == "De7"){
+    return(c("#2b83ba","#abdda4","#fdae61","#d7191c"))
+  }else if(palette == "De8"){
+    return(c("#0000BF","#0000FF","#0080FF","#00FFFF","#40FFBF","#80FF80","#BFFF40","#FFFF00","#FF8000","#FF0000","#BF0000"))
+  }else if(palette == "Je1"){
+    c("#27408B", "#3A5FCD", "#3288BD", "#66C2A5","#ABDDA4", "#E6F598","#FEE08B", "#FDAE61","#F46D43","#D53E4F","#8B2323")
+  }
+}
+

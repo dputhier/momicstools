@@ -10,7 +10,7 @@ get_verbosity()
 A vector
 }
 \description{
-This function get the verbosity level of the momicstools package which
+This function get the verbosity level of the scomicstools package which
 controls the amount of information that is printed to the console by
 the \code{\link{print_msg}} function.
 }

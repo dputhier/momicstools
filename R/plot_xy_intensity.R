@@ -13,7 +13,7 @@
 #' @param legend Whether to display a legend for the color scale. Default is FALSE.
 #' @param pt_size The size of the points in the plot. Default is 2.1.
 #' @param pt_shape The shape of the points in the plot. Default is 16 (a circle).
-#'
+#' @param colours A vector of colors.
 #' @return A ggplot2 object containing the scatter plot.
 #'
 #' @importFrom ggplot2 ggplot geom_point scale_color_gradientn theme_void
@@ -29,6 +29,7 @@
 #' anterior1 <- SCTransform(anterior1, assay = "Spatial")
 #' plot_xy_intensity(seurat_obj = anterior1, gene_name = "Hpca", intensity_slot="sct")
 #' plot_xy_intensity(seurat_obj = anterior1, metadata = "nCount_SCT")
+#' @export
 plot_xy_intensity <- function(seurat_obj=NULL,
                               gene_name=NULL,
                               metadata=NULL,
@@ -37,7 +38,7 @@ plot_xy_intensity <- function(seurat_obj=NULL,
                               legend=TRUE,
                               pt_size=2.1,
                               pt_shape=16,
-                              colours=c("#A9D6E5", "#2166AC", "#000000", "#B2182B", "#FFCA3A")){
+                              colours=colors_for_gradient("J1")){
   
   intensity_slot <- match.arg(intensity_slot)
 

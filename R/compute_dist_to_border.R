@@ -1,9 +1,9 @@
 #' @name compute_dist_to_border
-#' @title Given a boarder between two spot groups, infer for each spot a: (i) the distance the
+#' @title Given a border between two spot groups, compute for each spot a: (i) the distance the
 #' closest spot (b) in the other class, (ii) the x/y coordinate of the point lying at the crossing
 #' between the border and (a,b) segment, (iii) the distance to the border.
 #' @param coord_spot a data.frame with spot coordinates (columns "x" and "y") and a column k (0 or 1) giving the class of the spot.
-#' @param border_segments a data.frame as produce by compute_visium_ortho_hull.
+#' @param border_segments a data.frame as produce by visium_hull().
 #' @param diagnostic_plot Whether to produce a diagnostic diagram. Highly recommanded to visually inspect the results.
 #' @keywords hull, spatial transcriptomics, visium, border, spot.
 #' @return a dataframe with the following columns: x (input x coordinate), y (input y coordinate),
@@ -13,16 +13,20 @@
 #' intersection with the border), dist2_inter (the distance to the intersection with the border),
 #' k (input k).
 #' @examples
-#' #' #' library(SeuratData)
+#' #' library(SeuratData)
 #' library(Seurat)
 #' #InstallData("stxBrain")
 #' anterior1 <- LoadData("stxBrain", type = "anterior1")
-#' anterior1 <- preprocess_seurat_data(anterior1, normalization_method = "SCTransform")
+#' anterior1 <- preprocess_seurat_data(anterior1, normalization_method = "NormalizeData")
+#' path <- visium_hull(coord_st_data, size_x=3.2, size_y=3.6, delta=0.5)
+#' ## Add the segments to the ggplot diagram
+#' spatial_plot <- SpatialDimPlot(anterior1_preprocessed, label = TRUE, label.size = 3, pt.size.factor = 1.5)
+#' spatial_plot +
 #' # Select some points (just to give an example)
 #' coord_spot_brain <- getFlippedTissueCoordinates(brain)
 #' coord_spot_brain$k <- 0
 #' coord_spot_brain[SeuratObject::WhichCells(brain, idents=0), ]$k <- 1 # class 0 is the class of interest (labeled 1 against 0 for others)
-#' border_segments <- compute_visium_ortho_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
+#' border_segments <- visium_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
 #' dist_to_border <- compute_dist_to_border(coord_spot_brain, border_segments)
 #' brain[["dist2border"]] <- dist_to_border$dist2_inter
 #' SpatialFeaturePlot(brain,
@@ -37,10 +41,12 @@
 #'                color="white",
 #'                size=0.7)
 #' @export compute_dist_to_border
-compute_dist_to_border <- function(coord_spot, border_segments, diagnostic_plot=TRUE){
+compute_dist_to_border <- function(seurat_obj, diagnostic_plot=TRUE){
 
+  coord_spot <- getFlippedTissueCoordinates(seurat_obj)
+  border_segments <- visium_hull(coord_spot, size_x=3.6, size_y=3.4, delta=0.5)
   rownames(coord_spot) <- 1:nrow(coord_spot)
-
+  
   # Compute first the distance of spot 0 to the border
   # then of spot 1
   k1 <- 0

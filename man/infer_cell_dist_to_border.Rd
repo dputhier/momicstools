@@ -39,7 +39,7 @@ brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
 coord_spot_brain <- getFlippedTissueCoordinates(brain)
 coord_spot_brain$k <- 0
 coord_spot_brain[SeuratObject::WhichCells(brain, idents=0), ]$k <- 1 # class 0 is the class of interest (labeled 1 against 0 for others)
-border_segments <- compute_visium_ortho_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
+border_segments <- visium_hull(coord_spot_brain, size_x=3.6, size_y=3.4, delta=0.5)
 dist_to_border <- compute_dist_to_border(coord_spot_brain, border_segments)
 markers <- list(c("A", "B", "C"), c("D", "E", "F" ))
 infer_cell_dist_to_border(brain, dist_to_border, markers)

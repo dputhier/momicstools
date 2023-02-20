@@ -1,41 +1,30 @@
-#' @name compute_visium_ortho_hull
-#' @title Compute location of segments used to create an orthogonal hull around points related
-#' to a particular class.
+#' @name visium_hull
+#' @title Internal function. Compute location of segments used to create an orthogonal 
+#' hull around points related to a particular class.
 #' @param data a data.frame.
-#' @param x the column name storing the x coord
-#' @param y the column name storing the y coord
-#' @param k the column name storing the classes (0 not part of the class of interest, 1 part of the class of interest)
-#' @param size_y the size of the square (y axis)
-#' @param size_x the size of the square (x axis)
-#' @param step_y the distance between two points on the y axis.
-#' @param step_x the distance between two points on the x axis.
-#' @param delta add more or less flexibility to search for neighbor points
-#' @param verbose whether the function should print (debug) info during processing.
+#' @param x The column name storing the x coord
+#' @param y The column name storing the y coord
+#' @param k The column name storing the classes (0 not part of the class of interest, 1 part of the class of interest)
+#' @param size_y The size of the square (y axis)
+#' @param size_x The size of the square (x axis)
+#' @param step_y The distance between two points on the y axis.
+#' @param step_x The distance between two points on the x axis.
+#' @param delta Add more or less flexibility to search for neighbor points
 #' @keywords hull, spatial transcriptomics, visium
-#' @return a dataframe with coordinates x, y, xend, yend (see geom_segments).
+#' @return A dataframe with coordinates x, y, xend, yend (see geom_segments).
 #' @examples
-#' ## Install and process the brain dataset
-#' library(Seurat)
-#' library(SeuratData)
-#' library(ggplot2)
-#' InstallData("stxBrain")
-#' library(ohmiki)
-#' brain <- LoadData("stxBrain", type = "anterior1")
-#' brain <- SCTransform(brain, assay = "Spatial", verbose = FALSE)
-#' brain <- RunPCA(brain, assay = "SCT", verbose = FALSE)
-#' brain <- FindNeighbors(brain, reduction = "pca", dims = 1:30)
-#' brain <- FindClusters(brain, verbose = FALSE)
-#' brain <- RunUMAP(brain, reduction = "pca", dims = 1:30)
-#' spatial_plot <- SpatialDimPlot(brain, label = TRUE, label.size = 3, pt.size.factor = 1.5)
+#' if (! "stxBrain" %in% InstalledData()$Dataset) InstallData('stxBrain')
+#' LoadData("stxBrain", type = "anterior1")
+#' # Preprocess the data
+#' anterior1_preprocessed <- preprocess_seurat_data(anterior1, normalization_method = "NormalizeData", approx=F)
 #' ## Retrieve x/y coordinates and group from ggplot object
-#' coord_st_data <- ggplot_build(spatial_plot)$data[[1]][,c("x", "y", "group")]
-#' coord_st_data$group <- coord_st_data$group - 1 # group are 1-based in ggplot compare to seurat
-#' ## Cluster 0 is, for instance, the cluster of interest.
-#' cluster_to_show <- 0 # Could be also c(a, b)
-#' coord_st_data$k <- ifelse(coord_st_data$group %in% cluster_to_show, 1, 0)
+#' coord_st_data <- getFlippedTissueCoordinates(anterior1_preprocessed, as_data_frame=TRUE)
+#' # Create a hull around cluster 0
+#' coord_st_data$k <- ifelse(Idents(anterior1_preprocessed)==0, 1, 0)
 #' ## Compute the segments of the hull.
-#' path <- compute_visium_ortho_hull(coord_st_data, size_x=3.2, size_y=3.6, delta=0.5)
+#' path <- visium_hull(coord_st_data, size_x=3.2, size_y=3.6, delta=0.5)
 #' ## Add the segments to the ggplot diagram
+#' spatial_plot <- SpatialDimPlot(anterior1_preprocessed, label = TRUE, label.size = 3, pt.size.factor = 1.5)
 #' spatial_plot +
 #'   theme_bw() +
 #'   geom_segment(data=path,
@@ -46,17 +35,16 @@
 #'                inherit.aes = F,
 #'                color="white",
 #'                size=0.7)
-#' @export compute_visium_ortho_hull
-compute_visium_ortho_hull <- function(data,
-                                      x="x",
-                                      y="y",
-                                      k="k",
-                                      size_x=4.6,
-                                      size_y=5,
-                                      step_x=2.6,
-                                      step_y=2.4,
-                                      delta=0.3,
-                                      verbose=F){
+#' @export visium_hull
+visium_hull <- function(data,
+                        x="x",
+                        y="y",
+                        k="k",
+                        size_x=4.6,
+                        size_y=5,
+                        step_x=2.6,
+                        step_y=2.4,
+                        delta=0.3){
 
     center_and_rotate <- function(data, center_x, center_y, angle, x="x", y="y"){
 
@@ -101,12 +89,10 @@ compute_visium_ortho_hull <- function(data,
     return(neighbor_class)
   }
 
-
   # Create a dataframe to store
   # square segment
 
-  if(verbose)
-    cat(">> Creating a dataframe to store output.\n")
+  print_msg("Creating a dataframe to store output", msg_type="INFO")
 
   df_coord <- data.frame(matrix(NA, ncol=4, nrow=6))
   rownames(df_coord) <- sapply("region_name",
@@ -116,8 +102,7 @@ compute_visium_ortho_hull <- function(data,
                                  "west", "east"))
   colnames(df_coord) <- c("x1", "x2", "y1", "y2")
 
-  if(verbose)
-    cat(">> Looping over the points.\n")
+  print_msg("Looping over the points.", msg_type="INFO")
 
   for(p in 1:nrow(data)){
 
@@ -127,23 +112,20 @@ compute_visium_ortho_hull <- function(data,
 
     p_name <- paste0(p, "_", x_p, "_", y_p, "_")
 
-    if(verbose)
-      cat(paste0(">> Processing", p_name, ".\n"))
+    print_msg(paste0("Processing: ", p_name), msg_type="DEBUG")
 
 
     if(pt_class == 1){
-      if(verbose)
-        print(paste0(x_p, " ", y_p))
+      print_msg(paste0("x_p, y_p", x_p, " ", y_p), msg_type="DEBUG")
 
       ## West
       data_cr <- center_and_rotate(data, center_x = x_p, center_y = y_p, angle=180, x=x, y=y)
       neighbor_class <- get_neighbor_class(data_cr)
 
       if(neighbor_class == 0 || is.null(neighbor_class)){
-        if(verbose){
-          print(paste0(p_name, " West"))
-          print(as.character(neighbor_class))
-        }
+          print_msg(paste0(p_name, " West"), msg_type="DEBUG")
+          print_msg(as.character(neighbor_class), msg_type="DEBUG")
+
         df_coord[paste0(p_name, "west"),] <- c(x1 = x_p - size_x,
                                                x2 = x_p - size_x,
                                                y1 = y_p -  size_y,
@@ -158,10 +140,10 @@ compute_visium_ortho_hull <- function(data,
 
 
       if(neighbor_class == 0 || is.null(neighbor_class)){
-        if(verbose){
-          print(paste0(p_name, " East"))
-          print(as.character(neighbor_class))
-        }
+        
+        print_msg(paste0(p_name, " East"), msg_type="DEBUG")
+        print_msg(as.character(neighbor_class), msg_type="DEBUG")
+        
         df_coord[paste0(p_name, "east"),] <- c(x1 = x_p + size_x,
                                                x2 = x_p + size_x,
                                                y1 = y_p -  size_y,
@@ -174,10 +156,10 @@ compute_visium_ortho_hull <- function(data,
       neighbor_class <- get_neighbor_class(data_cr)
 
       if(neighbor_class == 0 || is.null(neighbor_class)){
-        if(verbose){
-          print(paste0(p_name, " North_east"))
-          print(as.character(neighbor_class))
-        }
+
+        print_msg(paste0(p_name, " North_east"), msg_type="DEBUG")
+        print_msg(as.character(neighbor_class), msg_type="DEBUG")
+
         df_coord[paste0(p_name, "north_east"),] <- c(x1 = x_p,
                                                      x2 = x_p + size_x,
                                                      y1 = y_p +  size_y,
@@ -190,10 +172,10 @@ compute_visium_ortho_hull <- function(data,
       neighbor_class <- get_neighbor_class(data_cr)
 
       if(neighbor_class == 0 || is.null(neighbor_class)){
-        if(verbose){
-          print(paste0(p_name, " North_west"))
-          print(as.character(neighbor_class))
-        }
+        
+        print_msg(paste0(p_name, " North_west"), msg_type="DEBUG")
+        print_msg(as.character(neighbor_class), msg_type="DEBUG")
+        
         df_coord[paste0(p_name, "north_west"),] <- c(x1 = x_p -  size_x,
                                                      x2 = x_p ,
                                                      y1 = y_p +  size_y,
@@ -206,10 +188,10 @@ compute_visium_ortho_hull <- function(data,
       neighbor_class <- get_neighbor_class(data_cr)
 
       if(neighbor_class == 0 || is.null(neighbor_class)){
-        if(verbose){
-          print(paste0(p_name, " South_west"))
-          print(as.character(neighbor_class))
-        }
+        
+        print_msg(paste0(p_name, " South_west"), msg_type="DEBUG")
+        print_msg(as.character(neighbor_class), msg_type="DEBUG")
+
         df_coord[paste0(p_name, "south_west"),] <- c(x1 = x_p - size_x,
                                                      x2 = x_p,
                                                      y1 = y_p - size_y,
@@ -222,10 +204,10 @@ compute_visium_ortho_hull <- function(data,
       neighbor_class <- get_neighbor_class(data_cr)
 
       if(neighbor_class == 0 || is.null(neighbor_class)){
-        if(verbose){
-          print(paste0(p_name, " South_east"))
-          print(as.character(neighbor_class))
-        }
+        
+        print_msg(paste0(p_name, " South_east"), msg_type="DEBUG")
+        print_msg(as.character(neighbor_class), msg_type="DEBUG")
+
         df_coord[paste0(p_name, "south_east"),] <- c(x1 = x_p,
                                                      x2 = x_p +  size_x,
                                                      y1 = y_p - size_y,

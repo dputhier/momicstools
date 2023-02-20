@@ -16,7 +16,7 @@ plot_xy_intensity(
   legend = TRUE,
   pt_size = 2.1,
   pt_shape = 16,
-  colours = c("#A9D6E5", "#2166AC", "#000000", "#B2182B", "#FFCA3A")
+  colours = colors_for_gradient("J1")
 )
 }
 \arguments{
@@ -37,6 +37,8 @@ Must be one of "sct", "counts", or "data". Default is "sct".}
 \item{pt_size}{The size of the points in the plot. Default is 2.1.}
 
 \item{pt_shape}{The shape of the points in the plot. Default is 16 (a circle).}
+
+\item{colours}{A vector of colors.}
 }
 \value{
 A ggplot2 object containing the scatter plot.

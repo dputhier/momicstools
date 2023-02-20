@@ -11,6 +11,7 @@ preprocess_seurat_data(
   dims = 50,
   resolution = 0.6,
   n.neighbors = 30,
+  approx = TRUE,
   seed = NULL
 )
 }
@@ -27,6 +28,8 @@ either "NormalizeData" or "SCTransform". Defaults to "NormalizeData".}
 \item{resolution}{The resolution parameter for clustering. Defaults to 0.6.}
 
 \item{n.neighbors}{The number of neighbors for the FindNeighbors step. Defaults to 30.}
+
+\item{approx}{Use truncated singular value decomposition to approximate PCA.}
 
 \item{seed}{An optional seed for reproducibility.}
 }

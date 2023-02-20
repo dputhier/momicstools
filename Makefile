@@ -16,12 +16,12 @@ help:
 	@echo ""
 
 clean:
-	@rm -f src/*.o src/*.so; rm -f momicstools.Rcheck/dbfmcl/libs/dbfmcl.so; rm -rf ./dbfmcl.Rcheck
+	@rm -f src/*.o src/*.so; rm -f scomicstools.Rcheck/dbfmcl/libs/dbfmcl.so; rm -rf ./dbfmcl.Rcheck
 	@rm -rf /tmp/dbfmcl; rm -rf *dbf_out.txt; rm -rf *mcl_out.txt 
 
 check: clean
-	@rm -rf /tmp/momicstools; mkdir -p /tmp/momicstools; cp -r ./* /tmp/momicstools
-	@R CMD check /tmp/momicstools
+	@rm -rf /tmp/scomicstools; mkdir -p /tmp/scomicstools; cp -r ./* /tmp/scomicstools
+	@R CMD check /tmp/scomicstools
 
 doc:
 	@echo ">>> Creating a package documentation"

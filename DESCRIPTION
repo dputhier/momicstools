@@ -1,4 +1,4 @@
-Package: momicstools
+Package: scomicstools
 Title: Our helpful multi-omics tool kit
 Version: 0.1
 Description: This package implements a set of function for spatial multi-omics.
